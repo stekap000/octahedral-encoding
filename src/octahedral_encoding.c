@@ -1,6 +1,12 @@
 #include <stdio.h>
 #include <math.h>
 
+float float_abs(float x) {
+	union {float f; unsigned int i; } bits = {x};
+	bits.i &= 0x7fffffff;
+	return bits.f;
+}
+
 typedef struct {
 	float x, y, z;
 } v3;
@@ -36,6 +42,8 @@ v2 octahedral_encode(v3 v) {
 
 int main() {
 	printf("Init\n");
+
+	
 	
 	return 0;
 }
