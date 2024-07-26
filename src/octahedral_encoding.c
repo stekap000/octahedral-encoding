@@ -36,8 +36,9 @@ v3 scale(v3 v, float a) {
 	return (v3){v.x*a, v.y*a, v.z*a};
 }
 
-// In more realistic case, this function would accept one batch of vectors, and not just one vector.
-// Also, it would produce one batch of mapped vectors. Number would depent on cache sizes.
+// In more realistic case, functions would accept one batch of vectors, and not just one vector.
+// Also, they would produce one batch of mapped vectors. Number would depent on cache sizes.
+
 v2 octahedral_encode(v3 v) {
 	// v is assumed to be unit.
 	
@@ -114,8 +115,7 @@ v2 octahedral_encode(v3 v) {
 	*/
 	float denom = float_abs(v.x) + float_abs(v.y) + float_abs(v.z);
 	if(denom == 0) return (v2){0, 0};
-	float t = 1 / denom;
-	v3 intersection_point = scale(v, t);
+	v3 intersection_point = scale(v, 1 / denom);
 	/*
 	  o Mapping intersection points to 2D space
 
@@ -157,14 +157,60 @@ v2 octahedral_encode(v3 v) {
 		intersection_point.x = float_sign(intersection_point.x)*(1 - float_abs(intersection_point.x)),
 		intersection_point.y = float_sign(intersection_point.y)*(1 - float_abs(intersection_point.y))
 	};
+}
 
-	// TODO: Map 2D space to UV space.
+v3 octahedral_decode(v2 v) {
+	
+}
+
+v2 octahedral_map_to_uv(v2 v) {
+	/*
+	  o Mapping octahedral coordinates to UV space
+	  
+	    Here we map 2D octahedral coordinates, which are in range [-1, 1], to UV space
+		coordinates, which are in range [0, 1].
+
+		Reason for doing this is that we can easily access texture information based on
+		stored coordinates.
+
+		One example where this can be used is the following:
+		    We have a complicated scene and we are focusing on rendering specific object. This object
+			can have reflective and other properties. In such cases, it is usually not feasible to try
+			to determine light transport in real time. For this reason, we can run simulation separately,
+			determine color values for object in every direction, and there store those results. Later,
+			when we are rendering this object in that particular scene, we can just query this map with
+			direction vectors, get colors and render object. This kind of map from directions to colors
+			is usually called environment mapping.
+			
+			One thing here where we can use octahedral encoding with UV coordinates is when we are decide
+			to simulate object colors in certain number of directions. This way, we will get pairs of
+			vectors and colors ie. ((x, y, z), (r, g, b)). We can map vectors to octahedral UV coordinates,
+			thus getting ((u, v), (r, g, b)), where u and v are in range [0, 1]. Then, we can determine
+			the size of texture where we will store these colors, and store them in such a way that some
+			color (r1, g1, b1) with UV coordinates (u1, v1) will be placed on pixel with coordinates
+			(u1*texture_width, v1*texture_height). We can fill this texture with more colors by doing
+			simulations for more directions, and we can also try to interpolate between some color values.
+			Regardless, we now have texture whose colors represent some object colors (in particular
+			direction) in some scene.
+
+			Now, when we are rendering this object in that scene, and we need it's color in specific
+			direction, we can take that direction vector, map it to octahedral UV space, and index
+			constructed texture by multiplying it's (u, v) coordinates with texture width and height.
+			As a result, we get object color for requested direction.
+
+		We don't need to store just colors in this way. We can store reflections, lighting and whatever
+		else we need.
+	*/
+	return (v2){(v.x + 1)*0.5, (v.y + 1)*0.5};
 }
 
 int main() {
 	printf("Init\n");
 
-	
+	// (x, y, z) --- color
+	// (o, m) --- color
+	// [0, 1]
+	// [0, w], [0, h]
 	
 	return 0;
 }
