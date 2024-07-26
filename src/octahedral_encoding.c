@@ -7,6 +7,10 @@ float float_abs(float x) {
 	return bits.f;
 }
 
+float float_sign(float x) {
+	return (x > 0) - (x < 0);
+}
+
 typedef struct {
 	float x, y, z;
 } v3;
@@ -51,6 +55,9 @@ v2 octahedral_encode(v3 v) {
 		Joining two equation together we get:
 		    (t*d - R)*n = 0  =>  t*d*n = R*n  =>  t = (R*n)/(d*n)
 
+		Octahedron that we use is the one with vertices at:
+		    (1, 0, 0), (0, 1, 0), (-1, 0, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)
+		
 		Since we want to find a point of intersection between direction vector
 		and octahedron, we would need to test if direction vector intersects
 		one of 8 triangles/planes of octahedron.
@@ -102,13 +109,53 @@ v2 octahedral_encode(v3 v) {
 		Of course, we don't need to literally do all these steps. As an example,
 		we don't need to map vector back, since we already have that vector.
 	*/
-	float t = 1 / (float_abs(v.x) + float_abs(v.y) + float_abs(v.z));
+	float denom = float_abs(v.x) + float_abs(v.y) + float_abs(v.z);
+	if(denom == 0) return (v2){0, 0};
+	float t = 1 / denom;
 	v3 intersection_point = scale(v, t);
+	/*
+	  o Mapping intersection points to 2D space
 
-	// TODO: Map resulting vector to 2D space.
+	    We will project upper octahedron portion to xy plane, and then patch 2D map
+		into square by adjusting it with lower octahedron portion.
+
+		First, we project intersection points on the upper sides to xy plane by setting
+		z = 0. At this point, our 2D map looks like a unit diamond with vertices at
+		(1, 0), (0, 1), (-1, 0), (0, -1).
+
+		Next, we will complete this map into a square, by unfolding lower sides of the
+		octahedron to their corresponding xy plane regions, where they are connected
+		with their corresponding upper side. Then, we will just scale them, so that
+		they complete map into a square that stretches from -1 to 1 on both axes.
+		Computationally, we can do this by projecting intersection points from lower
+		sides to xy plane, thus getting 4 triangles for those 4 sides, and then
+		unfolding them by rotating them for 180 deg around their corresponding
+		diamond map sides (or equivalently, making their reflection in mentioned sides).
+		
+		To do this in xy plane, with the reflection in side y = -x + 1, we will map
+		(x, y) point to (1-y, 1-x) point.
+
+		This mapping is completely valid, but it requires temp save when new x and y coordinates
+		are calculated. This is because we need to store old x before we calculate new one since
+		calculation of new y requires old x. Because of this, we can imagine additional mapping
+		that we apply after mentioned rotation that rotates given triangle in first quadrant around
+		y = x line. This way, point (x,y) gets mapped into (1-x, 1-y) which does not require temp
+		save in calculation since new x coordinate only depends on previous x, and new y depends
+		only on previous y.
+
+		Of course, we use symmetry so that we can use the same calculation for all
+		sides in the similar way as for finding intersection points. For this purpose,
+		we again use absolute function. After calculation in the first quadrant, we just move
+		result into specific quadrant corresponding to specific point by using signs of x and y.
+	*/
+	if(intersection_point.z >= 0) return (v2){intersection_point.x, intersection_point.y};
+
+	return (v2){
+		intersection_point.x = float_sign(intersection_point.x)*(1 - float_abs(intersection_point.x)),
+		intersection_point.y = float_sign(intersection_point.y)*(1 - float_abs(intersection_point.y))
+	};
+
 	// TODO: Map 2D space to UV space.
-
-	return (v2){0,0};
 }
 
 int main() {
