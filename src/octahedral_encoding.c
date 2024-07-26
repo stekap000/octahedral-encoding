@@ -36,8 +36,11 @@ v3 scale(v3 v, float a) {
 	return (v3){v.x*a, v.y*a, v.z*a};
 }
 
-// v is assumed to be unit.
+// In more realistic case, this function would accept one batch of vectors, and not just one vector.
+// Also, it would produce one batch of mapped vectors. Number would depent on cache sizes.
 v2 octahedral_encode(v3 v) {
+	// v is assumed to be unit.
+	
 	/*
 	  o Intersection of direction vector with octahedron
 
