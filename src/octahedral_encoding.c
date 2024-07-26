@@ -32,7 +32,7 @@ float v3_dot(v3 v, v3 w) {
 	return v.x*w.x + v.y*v.y + v.z*w.z;
 }
 
-v3 scale(v3 v, float a) {
+v3 v3_scale(v3 v, float a) {
 	return (v3){v.x*a, v.y*a, v.z*a};
 }
 
@@ -40,8 +40,6 @@ v3 scale(v3 v, float a) {
 // Also, they would produce one batch of mapped vectors. Number would depent on cache sizes.
 
 v2 octahedral_encode(v3 v) {
-	// v is assumed to be unit.
-	
 	/*
 	  o Intersection of direction vector with octahedron
 
@@ -113,9 +111,10 @@ v2 octahedral_encode(v3 v) {
 		Of course, we don't need to literally do all these steps. As an example,
 		we don't need to map vector back, since we already have that vector.
 	*/
+	v = v3_unit(v);
 	float denom = float_abs(v.x) + float_abs(v.y) + float_abs(v.z);
 	if(denom == 0) return (v2){0, 0};
-	v3 intersection_point = scale(v, 1 / denom);
+	v3 intersection_point = v3_scale(v, 1 / denom);
 	/*
 	  o Mapping intersection points to 2D space
 
@@ -151,7 +150,7 @@ v2 octahedral_encode(v3 v) {
 		we again use absolute function. After calculation in the first quadrant, we just move
 		result into specific quadrant corresponding to specific point by using signs of x and y.
 	*/
-	if(intersection_point.z >= 0) return (v2){intersection_point.x, intersection_point.y};
+	if(v.z >= 0) return (v2){intersection_point.x, intersection_point.y};
 
 	return (v2){
 		intersection_point.x = float_sign(intersection_point.x)*(1 - float_abs(intersection_point.x)),
@@ -160,7 +159,19 @@ v2 octahedral_encode(v3 v) {
 }
 
 v3 octahedral_decode(v2 v) {
+	/*
+	  
+	*/
+	float temp = float_abs(v.x) + float_abs(v.y);
+	if(temp > 1) {
+		return v3_unit((v3){
+				float_sign(v.x)*(1 - float_abs(v.x)),
+				float_sign(v.y)*(1 - float_abs(v.y)),
+				1 - temp // Exploit plane form
+			});
+	}
 	
+	return v3_unit((v3){v.x, v.y, 1 - temp});
 }
 
 v2 octahedral_map_to_uv(v2 v) {
@@ -204,7 +215,8 @@ v2 octahedral_map_to_uv(v2 v) {
 	return (v2){(v.x + 1)*0.5, (v.y + 1)*0.5};
 }
 
-int main() {
+int main(void) {
+
 
 	return 0;
 }
