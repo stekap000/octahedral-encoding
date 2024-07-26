@@ -205,12 +205,6 @@ v2 octahedral_map_to_uv(v2 v) {
 }
 
 int main() {
-	printf("Init\n");
 
-	// (x, y, z) --- color
-	// (o, m) --- color
-	// [0, 1]
-	// [0, w], [0, h]
-	
 	return 0;
 }
