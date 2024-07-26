@@ -251,7 +251,16 @@ v2 octahedral_map_to_uv(v2 v) {
 }
 
 int main(void) {
-
+	v3 u = (v3){12, -21, -8};
+	u = v3_unit(u);
+	v2 v = octahedral_encode(u);
+	printf("ORIGINAL : %f, %f %f\n", u.x, u.y, u.z);
+	printf("ENCODED  : %f, %f\n", v.x, v.y);
+	v2 uv = octahedral_map_to_uv(v);
+	printf("UV       : %f, %f\n", uv.x, uv.y);
+	v3 w = octahedral_decode(v);
+	
+	printf("DECODED  : %f, %f %f\n", w.x, w.y, w.z);
 	
 	return 0;
 }
