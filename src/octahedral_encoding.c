@@ -160,14 +160,49 @@ v2 octahedral_encode(v3 v) {
 
 v3 octahedral_decode(v2 v) {
 	/*
-	  
+	  o Decoding octahedral encoded vector
+
+	    Again, we will operate within first quadrant by using absolute values and adjust for other
+		quadrants after that.
+		
+	    First we need to check whether given vector is within or outside the octahedral diamond in the map.
+		We can do this by recognizing that we are inside triangle (first quadrant) as long as x + y < 1.
+
+		Another thing that we need is a way to reconstruct z coordinate. For this, we use intersection of
+		ray and plane, just like for encoding, with an adjustment to the ray form. Let's say we have point
+		(x, y) within triangle and that it is result of projection of upper sides of octahedron. In order
+		to reconstruct z, we can find intersection point of plane representing octahedron side and ray
+		that starts at point (x, y) and goes upward or downward. Two equation are:
+		    (P - R)*n = 0
+			P = p + d*t, where p is mentioned (x, y)
+
+		Whether we look at upward or downward ray depends on whether we are inside or outside triangle.
+		If the point is inside, we know that we got it by projecting intersection points from upper side
+		to xy plane. In this case, we will send ray upward.
+		If the point is outside, then we know that it belonged to lower side of octahedron, so we will
+		point ray downward. In this case, we also need to map outside point to the inside of the triangle,
+		which will just reverse computation done during encoding. After doing this, we now have ray origin
+		and direction.
+			
+		We can find t because we know everything else.
+		Solution for upward ray is   : t = 1 - (x + y)
+		Solution for downward ray is : t = (x + y) - 1
+		
+		Another subtle thing to notice is how we can calculate t for the outside case. As mentioned, in
+		order to calculate this t, we need to map point to the inside of the triangle and then direct ray
+		downward. If we imagine upper octahedron side (or rather that plane) extending further through
+		xy plane, we can notice that if we take outside point (x, y) and attach upward ray to it, we
+		will get negative t that corresponds to that ray intersecting this extended side. This negative t
+		actually gives us z value for decoded point when point is on the outside. This means that we can
+		just calculate one t from input point, and use it for decoding in both cases, without having to
+		look for different t (based on mapping of outside point to inside point) for outside case.
 	*/
 	float temp = float_abs(v.x) + float_abs(v.y);
 	if(temp > 1) {
 		return v3_unit((v3){
 				float_sign(v.x)*(1 - float_abs(v.x)),
 				float_sign(v.y)*(1 - float_abs(v.y)),
-				1 - temp // Exploit plane form
+				1 - temp
 			});
 	}
 	
@@ -217,6 +252,6 @@ v2 octahedral_map_to_uv(v2 v) {
 
 int main(void) {
 
-
+	
 	return 0;
 }
