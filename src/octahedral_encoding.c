@@ -1,10 +1,15 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 
 float float_abs(float x) {
 	union {float f; unsigned int i; } bits = {x};
 	bits.i &= 0x7fffffff;
 	return bits.f;
+}
+
+float rand_float() {
+	return ((rand() / (float)RAND_MAX) - 0.5) * 2;
 }
 
 float float_sign(float x) {
@@ -250,6 +255,11 @@ v2 octahedral_map_to_uv(v2 v) {
 	return (v2){(v.x + 1)*0.5, (v.y + 1)*0.5};
 }
 
+v3 random_unit_vector() {
+	v3 v = {rand_float(), rand_float(), rand_float()};
+	return v3_unit(v);
+}
+
 void example1() {
 	v3 u = (v3){12, -21, -8};
 	u = v3_unit(u);
@@ -262,12 +272,45 @@ void example1() {
 	printf("DECODED  : %f, %f %f\n", w.x, w.y, w.z);
 }
 
-void example2() {
+#define MATRIX_DIM 400
+void example2(int n) {
+
+	FILE *file = fopen("coded.ppm", "wb");
+	if(file == NULL) return;
+
+	fprintf(file, "P6\n%d %d\n255\n", MATRIX_DIM, MATRIX_DIM);
+	if(ferror(file)) {
+		fclose(file);
+		return;
+	}
+
+	unsigned int matrix[MATRIX_DIM*MATRIX_DIM] = {};
+
+	v3 v;
+	v2 encoded;
+	int color = 0;
+	for(int i = 0; i < n; ++i) {
+		v = random_unit_vector();
+		encoded = octahedral_map_to_uv(octahedral_encode(v));
+		color = (unsigned char)(floor((v.z + 1)*0.5*255));
+		color <<= 1;
+		color |= (unsigned char)(floor((v.y + 1)*0.5*255));
+		color <<= 1;
+		color |= (unsigned char)(floor((v.x + 1)*0.5*255));
+		matrix[(int)(encoded.y*MATRIX_DIM)*MATRIX_DIM + (int)(encoded.x*MATRIX_DIM)] = color;
+	}
 	
+	for(int i = 0; i < MATRIX_DIM*MATRIX_DIM; ++i){
+		fwrite(&matrix[i], sizeof(char), 3, file);
+		if(ferror(file)) return;
+	}
+	
+	fclose(file);
 }
 
 int main(void) {
-	example1();
+	//example1();
+	example2(100000);
 	
 	return 0;
 }
