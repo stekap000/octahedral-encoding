@@ -250,7 +250,7 @@ v2 octahedral_map_to_uv(v2 v) {
 	return (v2){(v.x + 1)*0.5, (v.y + 1)*0.5};
 }
 
-int main(void) {
+void example1() {
 	v3 u = (v3){12, -21, -8};
 	u = v3_unit(u);
 	v2 v = octahedral_encode(u);
@@ -259,8 +259,15 @@ int main(void) {
 	v2 uv = octahedral_map_to_uv(v);
 	printf("UV       : %f, %f\n", uv.x, uv.y);
 	v3 w = octahedral_decode(v);
-	
 	printf("DECODED  : %f, %f %f\n", w.x, w.y, w.z);
+}
+
+void example2() {
+	
+}
+
+int main(void) {
+	example1();
 	
 	return 0;
 }
