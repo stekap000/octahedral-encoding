@@ -41,6 +41,11 @@ v3 v3_scale(v3 v, float a) {
 	return (v3){v.x*a, v.y*a, v.z*a};
 }
 
+v3 random_unit_vector() {
+	v3 v = {rand_float(), rand_float(), rand_float()};
+	return v3_unit(v);
+}
+
 // In more realistic case, functions would accept one batch of vectors, and not just one vector.
 // Also, they would produce one batch of mapped vectors. Number would depent on cache sizes.
 
@@ -256,9 +261,11 @@ v2 octahedral_map_to_uv(v2 v) {
 	return (v2){(v.x + 1)*0.5, (v.y + 1)*0.5};
 }
 
-v3 random_unit_vector() {
-	v3 v = {rand_float(), rand_float(), rand_float()};
-	return v3_unit(v);
+v2 octahedral_map_from_uv(v2 v) {
+	/*
+	  Just maps UV coordinates back to octahedral space.
+	*/
+	return (v2){v.x*2 - 1, v.y*2 - 1};
 }
 
 void example1() {
@@ -271,8 +278,10 @@ void example1() {
 	printf("ORIGINAL : %f, %f %f\n", u.x, u.y, u.z);
 	printf("ENCODED  : %f, %f\n", v.x, v.y);
 	v2 uv = octahedral_map_to_uv(v);
-	printf("UV       : %f, %f\n", uv.x, uv.y);
-	v3 w = octahedral_decode(v);
+	printf("TO UV    : %f, %f\n", uv.x, uv.y);
+	v2 from_uv = octahedral_map_from_uv(uv);
+	printf("FROM UV  : %f, %f\n", from_uv.x, from_uv.y);
+	v3 w = octahedral_decode(from_uv);
 	printf("DECODED  : %f, %f %f\n", w.x, w.y, w.z);
 }
 
