@@ -261,6 +261,9 @@ v3 random_unit_vector() {
 }
 
 void example1() {
+	/*
+	  This example just shows how encoding is done.
+	*/
 	v3 u = (v3){12, -21, -8};
 	u = v3_unit(u);
 	v2 v = octahedral_encode(u);
@@ -272,9 +275,32 @@ void example1() {
 	printf("DECODED  : %f, %f %f\n", w.x, w.y, w.z);
 }
 
-#define MATRIX_DIM 400
 void example2(int n) {
+	/*
+	  This example assigns color to each unit vector and then encodes that vector to
+	  uv coordinates, preserving the color value. The result of this example is a
+	  PPM image that shows encoded vectors (shows their colors).
+	  Picture contains more colors for larger number of mapped vectors n.
+	  For n=10000000, the whole image if filled with colors.
+	  Firstly, we can see the central diamond that represents upper portion of octahedron
+	  mapped to underlying plane (these colors correspond to direction vectors in the
+	  upper portion of 3D space).
+	  Secondly, we see outer 4 triangles that correspond to lower portion of octahedron
+	  in a way described earlier. To see that it is a previously described mapping,
+	  notice, for example, the lower right triangle. Now imagine a line that goes from
+	  center of the picture (diamond) to the lower right corner. Rotate lower right
+	  triangle around this line by 180 deg. After that, colors that are joining this
+	  triangle and a diamond will match, and there will be no visible edge (green will
+	  connect with green and pink with pink). Same conclusion can be drawn for other
+	  triangles and their rotation around respective lines.
+	  The fact that there is a visible edge and the colors do not match is the result of
+	  our choice of mapping that allowed us to avoid temporary save (described earlier).
 
+	  Additionally, try to imagine how colored octahedron looks just based on an image.
+	  Central diamond is a coloring for all upper sides of octahedron.
+	  Outside triangles, after mentioned rotation, are lower sides of octahedron.
+	*/
+#define MATRIX_DIM 400
 	FILE *file = fopen("coded.ppm", "wb");
 	if(file == NULL) return;
 
@@ -293,9 +319,9 @@ void example2(int n) {
 		v = random_unit_vector();
 		encoded = octahedral_map_to_uv(octahedral_encode(v));
 		color = (unsigned char)(floor((v.z + 1)*0.5*255));
-		color <<= 1;
+		color <<= 8;
 		color |= (unsigned char)(floor((v.y + 1)*0.5*255));
-		color <<= 1;
+		color <<= 8;
 		color |= (unsigned char)(floor((v.x + 1)*0.5*255));
 		matrix[(int)(encoded.y*MATRIX_DIM)*MATRIX_DIM + (int)(encoded.x*MATRIX_DIM)] = color;
 	}
@@ -306,11 +332,12 @@ void example2(int n) {
 	}
 	
 	fclose(file);
+#undef MATRIX_DIM
 }
 
 int main(void) {
 	//example1();
-	example2(100000);
+	example2(10000000);
 	
 	return 0;
 }
