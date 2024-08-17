@@ -59,7 +59,7 @@ v2 octahedral_encode(v3 v) {
 		P = t*d       - equation of line in direction d
 		(P - R)*n = 0 - equation of plane with normal n that contains point R
 
-		Joining two equation together we get:
+		Joining two equations together we get:
 		    (t*d - R)*n = 0  =>  t*d*n = R*n  =>  t = (R*n)/(d*n)
 
 		Octahedron that we use is the one with vertices at:
@@ -76,10 +76,11 @@ v2 octahedral_encode(v3 v) {
 		scaling them with given t in their original form.
 
 		To find intersection point in first octant, we need to define parameters R,n
-		for the plane that contains octahedron side located in first octant.
+		for the plane that contains octahedron's side located in first octant.
 		Notice that it is enough to test intersection with the plane and not
 		necessary to test intersection with a triangle since any direction vector
-		in first octant must hit this plane/side of octahedron.
+		in first octant must hit this plane/side of octahedron (testing plane intersection
+		is cheaper than testing triangle intersection).
 		We pick most obvious parameters:
 		    R = (0, 0, 1) - Any vertex from first octant side.
 			n = (1, 1, 1) - If this is not intuitive, you can prove it by forming
@@ -92,7 +93,7 @@ v2 octahedral_encode(v3 v) {
 		    t = 1 / (dx + dy + dz) - dx, dy, dz are coordinates for direction vector
 
 		This formula works for first octant. To make it usable for other direction
-		vectors, we will map those vector to first octant. Notice that this can be
+		vectors, we will map those vectors to first octant. Notice that this can be
 		done by changing all their negative coordinates to positive ie. we can just
 		use absolute value of their coordinates.
 
@@ -102,7 +103,7 @@ v2 octahedral_encode(v3 v) {
 		Why does this work?
 
 		Because the scale of any direction vector for intersection point just depends
-		on relative relation between that vector and it's octant octahedron side, not
+		on relative relation between that vector and it's octant's octahedron side, not
 		on the absolute positions in 3D space. This means that we can move that vector
 		and it's corresponding octahedron side anywhere in 3D space and scalar t will
 		not change, as long as they are in the same relative position.
@@ -111,7 +112,7 @@ v2 octahedral_encode(v3 v) {
 
 		Conceptually, we have done this:
 		    Take arbitrary unit vector -> Map it to first octant -> Find scalar for
-			intersection -> Map vector back to it's octant -> Scale it with fould scalar
+			intersection -> Map vector back to it's octant -> Scale it with found scalar
 
 		Of course, we don't need to literally do all these steps. As an example,
 		we don't need to map vector back, since we already have that vector.
@@ -136,7 +137,7 @@ v2 octahedral_encode(v3 v) {
 		they complete map into a square that stretches from -1 to 1 on both axes.
 		Computationally, we can do this by projecting intersection points from lower
 		sides to xy plane, thus getting 4 triangles for those 4 sides, and then
-		unfolding them by rotating them for 180 deg around their corresponding
+		unfolding them by rotating them by 180 deg around their corresponding
 		diamond map sides (or equivalently, making their reflection in mentioned sides).
 		
 		To do this in xy plane, with the reflection in side y = -x + 1, we will map
@@ -165,21 +166,21 @@ v2 octahedral_encode(v3 v) {
 
 v3 octahedral_decode(v2 v) {
 	/*
-	  o Decoding octahedral encoded vector
+	  o Decoding octahedraly encoded vector
 
-	    Again, we will operate within first quadrant by using absolute values and adjust for other
+	    Again, we will operate within first quadrant by using absolute values, and adjust for other
 		quadrants after that.
 		
 	    First we need to check whether given vector is within or outside the octahedral diamond in the map.
 		We can do this by recognizing that we are inside triangle (first quadrant) as long as x + y < 1.
 
 		Another thing that we need is a way to reconstruct z coordinate. For this, we use intersection of
-		ray and plane, just like for encoding, with an adjustment to the ray form. Let's say we have point
-		(x, y) within triangle and that it is result of projection of upper sides of octahedron. In order
-		to reconstruct z, we can find intersection point of plane representing octahedron side and ray
+		ray and plane, just like for encoding, with an adjustment to the ray form. Let's say we have a point
+		(x, y) within triangle and that it is the result of projection of upper sides of octahedron. In order
+		to reconstruct z, we can find intersection point of the plane representing octahedron's side and ray
 		that starts at point (x, y) and goes upward or downward. Two equation are:
 		    (P - R)*n = 0
-			P = p + d*t, where p is mentioned (x, y)
+			P = p + d*t, where p is mentioned (x, y) point
 
 		Whether we look at upward or downward ray depends on whether we are inside or outside triangle.
 		If the point is inside, we know that we got it by projecting intersection points from upper side
@@ -194,8 +195,8 @@ v3 octahedral_decode(v2 v) {
 		Solution for downward ray is : t = (x + y) - 1
 		
 		Another subtle thing to notice is how we can calculate t for the outside case. As mentioned, in
-		order to calculate this t, we need to map point to the inside of the triangle and then direct ray
-		downward. If we imagine upper octahedron side (or rather that plane) extending further through
+		order to calculate this t, we need to map point to the inside of the triangle and then direct the ray
+		downward. If we imagine upper octahedron's side (or rather that plane) extending further through
 		xy plane, we can notice that if we take outside point (x, y) and attach upward ray to it, we
 		will get negative t that corresponds to that ray intersecting this extended side. This negative t
 		actually gives us z value for decoded point when point is on the outside. This means that we can
@@ -228,12 +229,12 @@ v2 octahedral_map_to_uv(v2 v) {
 		    We have a complicated scene and we are focusing on rendering specific object. This object
 			can have reflective and other properties. In such cases, it is usually not feasible to try
 			to determine light transport in real time. For this reason, we can run simulation separately,
-			determine color values for object in every direction, and there store those results. Later,
+			determine color values for object in every direction, and then store those results. Later,
 			when we are rendering this object in that particular scene, we can just query this map with
 			direction vectors, get colors and render object. This kind of map from directions to colors
 			is usually called environment mapping.
 			
-			One thing here where we can use octahedral encoding with UV coordinates is when we are decide
+			One example where we can use octahedral encoding with UV coordinates is when we decide
 			to simulate object colors in certain number of directions. This way, we will get pairs of
 			vectors and colors ie. ((x, y, z), (r, g, b)). We can map vectors to octahedral UV coordinates,
 			thus getting ((u, v), (r, g, b)), where u and v are in range [0, 1]. Then, we can determine
@@ -241,7 +242,7 @@ v2 octahedral_map_to_uv(v2 v) {
 			color (r1, g1, b1) with UV coordinates (u1, v1) will be placed on pixel with coordinates
 			(u1*texture_width, v1*texture_height). We can fill this texture with more colors by doing
 			simulations for more directions, and we can also try to interpolate between some color values.
-			Regardless, we now have texture whose colors represent some object colors (in particular
+			Regardless, we now have texture whose colors represent some object's colors (in particular
 			direction) in some scene.
 
 			Now, when we are rendering this object in that scene, and we need it's color in specific
@@ -280,11 +281,14 @@ void example2(int n) {
 	  This example assigns color to each unit vector and then encodes that vector to
 	  uv coordinates, preserving the color value. The result of this example is a
 	  PPM image that shows encoded vectors (shows their colors).
+	  
 	  Picture contains more colors for larger number of mapped vectors n.
-	  For n=10000000, the whole image if filled with colors.
+	  For n=10000000, the whole image is filled with colors.
+	  
 	  Firstly, we can see the central diamond that represents upper portion of octahedron
 	  mapped to underlying plane (these colors correspond to direction vectors in the
 	  upper portion of 3D space).
+	  
 	  Secondly, we see outer 4 triangles that correspond to lower portion of octahedron
 	  in a way described earlier. To see that it is a previously described mapping,
 	  notice, for example, the lower right triangle. Now imagine a line that goes from
@@ -293,10 +297,11 @@ void example2(int n) {
 	  triangle and a diamond will match, and there will be no visible edge (green will
 	  connect with green and pink with pink). Same conclusion can be drawn for other
 	  triangles and their rotation around respective lines.
+	  
 	  The fact that there is a visible edge and the colors do not match is the result of
 	  our choice of mapping that allowed us to avoid temporary save (described earlier).
 
-	  Additionally, try to imagine how colored octahedron looks just based on an image.
+	  Additionally, try to imagine how colored octahedron looks just based on this image.
 	  Central diamond is a coloring for all upper sides of octahedron.
 	  Outside triangles, after mentioned rotation, are lower sides of octahedron.
 	*/
